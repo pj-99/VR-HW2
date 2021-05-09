@@ -1,10 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using Mirror;
-using UnityEngine.SceneManagement;
+﻿using Mirror;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
 
 public class NetworkManagerLobby : NetworkManager
 {
@@ -15,14 +15,21 @@ public class NetworkManagerLobby : NetworkManager
     [SerializeField] private NetworkRoomPlayerLobby roomPlayerPrefab = null;
 
 
+    [Header("Game")]
+    [SerializeField] private NetworkGamePlayerLobby gamePlayerPrefab = null;
+    [SerializeField] private GameObject playerSpawnSystem = null;
+
+
     public static event Action OnClientConnected;
     public static event Action OnClientDisconnected;
+    public static event Action<NetworkConnection> OnServerReadied;
 
     //waiting room players list
     public List<NetworkRoomPlayerLobby> RoomPlayers { get; } = new List<NetworkRoomPlayerLobby>();
     //public override void OnStartServer() => spawnPrefabs = Resources.LoadAll<GameObject>("SpawnablePrefabs").ToList();
 
-    
+    public List<NetworkGamePlayerLobby> GamePlayers { get; } = new List<NetworkGamePlayerLobby>();
+
     private  void Awake()
     {
         spawnPrefabs = Resources.LoadAll<GameObject>("SpawnablePrefabs").Where(x => x != playerPrefab).ToList();
@@ -118,6 +125,64 @@ public class NetworkManagerLobby : NetworkManager
     public override void OnStopServer()
     {
         RoomPlayers.Clear();
+    }
+
+
+    public void StartGame()
+    {
+        if (SceneManager.GetActiveScene().path == menuScene)
+        {
+            if (!IsReadyToStart()) { return; }
+
+            //mapHandler = new MapHandler(mapSet, numberOfRounds);
+
+           
+            ServerChangeScene("SceneGame_1");
+        }
+    }
+
+    
+    public override void ServerChangeScene(string newSceneName)
+    {
+        // From menu to game
+        Debug.Log("Server Chagne Scene menuScene: " + menuScene);
+        Debug.Log("Server Chagne Scene path" + SceneManager.GetActiveScene().path);
+        Debug.Log("Server Chagne Scene new SceneName" + newSceneName);
+        if (SceneManager.GetActiveScene().path == menuScene && newSceneName.Contains("SceneGame_"))
+        {
+            for (int i = RoomPlayers.Count - 1; i >= 0; i--)
+            {
+                var conn = RoomPlayers[i].connectionToClient;
+                var gameplayerInstance = Instantiate(gamePlayerPrefab);
+                gameplayerInstance.SetDisplayName(RoomPlayers[i].DisplayName);
+
+                //remove room player
+                NetworkServer.Destroy(conn.identity.gameObject);
+
+                NetworkServer.ReplacePlayerForConnection(conn, gameplayerInstance.gameObject);
+                //NetworkServer.Destroy(conn.identity.gameObject);
+            }
+        }
+
+        base.ServerChangeScene(newSceneName);
+    }
+
+
+    public override void OnServerReady(NetworkConnection conn)
+    {
+        base.OnServerReady(conn);
+
+        OnServerReadied?.Invoke(conn);
+    }
+
+    public override void OnServerSceneChanged(string sceneName)
+    {
+        if (sceneName.Contains("SceneGame"))
+        {
+            GameObject playerSpawnSystemInstance = Instantiate(playerSpawnSystem);
+            NetworkServer.Spawn(playerSpawnSystemInstance);
+
+        }
     }
 
 
