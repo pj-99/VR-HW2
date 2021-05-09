@@ -64,8 +64,8 @@ public class NetworkRoomPlayerLobby : NetworkBehaviour
         //check if is leader
         if (Room.RoomPlayers[0].connectionToClient != connectionToClient) return;
         //start game
-        Room.StartGame();
-        Debug.Log("romm.startgame!");
+        
+        Debug.Log("start game!");
     }
 
     public override void OnStartClient()
