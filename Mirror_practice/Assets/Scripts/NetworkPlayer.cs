@@ -8,6 +8,9 @@ public class NetworkPlayer : MonoBehaviour
     public Transform head;
     public Transform left;
     public Transform right;
+
+
+
     // Start is called before the first frame update
     void Start()
     {
