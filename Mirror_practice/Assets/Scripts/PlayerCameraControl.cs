@@ -15,15 +15,11 @@ public class PlayerCameraControl : NetworkBehaviour
     public Transform left = null;
 
 
-    public Transform headRig = null;
-    public Transform rightRig = null;
+    private Transform headRig = null;
+    private Transform rightRig = null;
     public Transform leftRig = null;
     public NetworkIdentity ni = null;
-    /**
-   
 
-    */
-    [SerializeField] private GameObject XRRig = null;
 
 
     private XRIDefaultInputActions controls;
@@ -76,7 +72,7 @@ public class PlayerCameraControl : NetworkBehaviour
 
     private void Update()
     {
-        if (hasAuthority)
+        if (!hasAuthority)
         {
             {
                 head.gameObject.SetActive(false);
@@ -88,20 +84,13 @@ public class PlayerCameraControl : NetworkBehaviour
             }
         }
 
+    }
 
-        void mapPosition(Transform target, Transform rigTransform)
-        {
-            //Vector3 position = controls.XRILeftHand.Position.ReadValue<Vector3>();
-            //Quaternion rotation = controls.XRILeftHand.Rotation.ReadValue<Quaternion>();
+    void mapPosition(Transform target, Transform rigTransform)
+    {
 
-            target.position = rigTransform.position;
-            target.rotation = rigTransform.rotation;
-
-        }
-
-
-
-
+        target.position = rigTransform.position;
+        target.rotation = rigTransform.rotation;
 
     }
 }
